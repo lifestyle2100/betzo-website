@@ -1,0 +1,260 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: sports
+    description: Sports betting data
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /sports:
+    get:
+      operationId: listSports
+      tags: [sports]
+      summary: List available sports
+      description: Returns all sports available from the odds API
+      responses:
+        "200":
+          description: List of sports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sport"
+
+  /odds:
+    get:
+      operationId: getOdds
+      tags: [sports]
+      summary: Get live odds for a sport
+      description: Returns upcoming and live matches with betting odds
+      parameters:
+        - name: sport
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Sport key (e.g. soccer_epl, basketball_nba)
+        - name: regions
+          in: query
+          required: false
+          schema:
+            type: string
+            default: us
+          description: Comma-separated regions (us, uk, eu, au)
+        - name: markets
+          in: query
+          required: false
+          schema:
+            type: string
+            default: h2h
+          description: Comma-separated markets (h2h, spreads, totals)
+      responses:
+        "200":
+          description: Odds data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OddsEvent"
+
+  /scores:
+    get:
+      operationId: getScores
+      tags: [sports]
+      summary: Get live and recent scores
+      description: Returns live and recently completed match scores
+      parameters:
+        - name: sport
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Sport key (e.g. soccer_epl, basketball_nba)
+        - name: daysFrom
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Days of results to return (1-3)
+      responses:
+        "200":
+          description: Scores data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScoreEvent"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Sport:
+      type: object
+      properties:
+        key:
+          type: string
+        group:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        has_outrights:
+          type: boolean
+      required:
+        - key
+        - group
+        - title
+        - active
+        - has_outrights
+
+    OddsEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        sport_key:
+          type: string
+        sport_title:
+          type: string
+        commence_time:
+          type: string
+        home_team:
+          type: string
+        away_team:
+          type: string
+        bookmakers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bookmaker"
+      required:
+        - id
+        - sport_key
+        - sport_title
+        - commence_time
+        - home_team
+        - away_team
+        - bookmakers
+
+    Bookmaker:
+      type: object
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        last_update:
+          type: string
+        markets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Market"
+      required:
+        - key
+        - title
+        - markets
+
+    Market:
+      type: object
+      properties:
+        key:
+          type: string
+        last_update:
+          type: string
+        outcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Outcome"
+      required:
+        - key
+        - outcomes
+
+    Outcome:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+      required:
+        - name
+        - price
+
+    ScoreEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        sport_key:
+          type: string
+        sport_title:
+          type: string
+        commence_time:
+          type: string
+        completed:
+          type: boolean
+        home_team:
+          type: string
+        away_team:
+          type: string
+        scores:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/TeamScore"
+        last_update:
+          type: string
+          nullable: true
+      required:
+        - id
+        - sport_key
+        - sport_title
+        - commence_time
+        - completed
+        - home_team
+        - away_team
+
+    TeamScore:
+      type: object
+      properties:
+        name:
+          type: string
+        score:
+          type: string
+      required:
+        - name
+        - score

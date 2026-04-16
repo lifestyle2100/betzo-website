@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Mostbet Clone"
+version = "1.0.0"
+id = "artifacts/mostbet-clone"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20515
+
+[services.development]
+run = "pnpm --filter @workspace/mostbet-clone run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mostbet-clone", "run", "build" ]
+publicDir = "artifacts/mostbet-clone/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20515"
+BASE_PATH = "/"
